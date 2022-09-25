@@ -75,7 +75,7 @@ def normalize_string_if_not_none(string: str):
         return string
 
 if __name__ == "__main__":
-    url = "https://rewards.hypixel.net/claim-reward/47276657"
+    url = input("URL > ")
     r = requests.get(url)
     rewards = get_rewards(r.text)
     csrf_token = get_csrf_token(r.text)
