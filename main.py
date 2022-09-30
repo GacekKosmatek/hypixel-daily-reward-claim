@@ -8,7 +8,6 @@ appdata_regex = re.compile(r"window\.appData = '(.+)';")
 csrf_token_regex = re.compile(r"window\.securityToken = \"(.+)\";")
 reward_id_regex = re.compile(r"(https?://)?rewards.hypixel.net/claim-reward/(.{8})/?")
 
-
 @dataclass(frozen=True)
 class Reward:
     rarity: str
@@ -23,6 +22,7 @@ def get_rewards(page_string: str) -> List[Reward]:
     if js_list := appdata_regex.findall(page_string):
         js: dict = json.loads(js_list[0])
     else:
+        print(page_string)
         raise RuntimeError("Could not find App Data string")
     if not js.get("rewards"):
         raise RuntimeError("Could not get rewards from string")
@@ -75,8 +75,20 @@ def normalize_string_if_not_none(string: str):
         return string
 
 if __name__ == "__main__":
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:77.0) Gecko/20100101 Firefox/77.0",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.5",
+        "Accept-Encoding": "gzip, deflate",
+        "Referer": "https://www.google.com/",
+        "DNT": "1",
+        "Connection": "keep-alive",
+        "Upgrade-Insecure-Requests": "1"
+    }
+    
     url = input("URL > ")
-    r = requests.get(url)
+    session = requests.Session()
+    r = session.get(url, headers=headers)
     rewards = get_rewards(r.text)
     csrf_token = get_csrf_token(r.text)
     for index, i in enumerate(rewards, start=1):
