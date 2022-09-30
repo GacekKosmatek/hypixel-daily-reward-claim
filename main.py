@@ -7,7 +7,16 @@ import re
 appdata_regex = re.compile(r"window\.appData = '(.+)';")
 csrf_token_regex = re.compile(r"window\.securityToken = \"(.+)\";")
 reward_id_regex = re.compile(r"(https?://)?rewards.hypixel.net/claim-reward/(.{8})/?")
-
+session = requests.Session()
+headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:77.0) Gecko/20100101 Firefox/77.0",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.5",
+    "Accept-Encoding": "gzip, deflate",
+    "DNT": "1",
+    "Connection": "keep-alive",
+    "Upgrade-Insecure-Requests": "1"
+}
 @dataclass(frozen=True)
 class Reward:
     rarity: str
@@ -58,9 +67,8 @@ def claim_reward(reward: Reward, url: str, csrf_token: str, csrf_cookie: str):
         "activeAd": 1,
         "_csrf": csrf_token,
         "watchedFallback": "false",
-    }, cookies={"_csrf": csrf_cookie})
+    }, cookies={"_csrf": csrf_cookie}, headers=headers)
     if (r.text != "reward claimed"):
-        print(r.text)
         raise RuntimeError("Failed to claim reward")
 
 def concat_if_not_none(*args: List[str]):
@@ -75,19 +83,7 @@ def normalize_string_if_not_none(string: str):
         return string
 
 if __name__ == "__main__":
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:77.0) Gecko/20100101 Firefox/77.0",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.5",
-        "Accept-Encoding": "gzip, deflate",
-        "Referer": "https://www.google.com/",
-        "DNT": "1",
-        "Connection": "keep-alive",
-        "Upgrade-Insecure-Requests": "1"
-    }
-    
     url = input("URL > ")
-    session = requests.Session()
     r = session.get(url, headers=headers)
     rewards = get_rewards(r.text)
     csrf_token = get_csrf_token(r.text)
